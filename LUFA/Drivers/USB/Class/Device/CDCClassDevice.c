@@ -37,13 +37,49 @@
 #define  __INCLUDE_FROM_CDC_DEVICE_C
 #include "CDCClassDevice.h"
 
+const uint8_t WEBUSB_LANDING_PAGE[27] PROGMEM = {
+0x1B, 0x03, 'h', 't', 't', 'p', 's', ':', '/', '/', 'c', 'r', 'e', 'a', 't',
+'e', '.', 'a', 'r', 'd', 'u', 'i', 'n', 'o', '.', 'c', 'c',
+};
+
+const uint8_t WEBUSB_ALLOWED_ORIGINS[55] PROGMEM = {
+0x04, 0x00, 0x37, 0x00, 0x1C, 0x03, 'h', 't', 't', 'p', 's', ':', '/', '/',
+'f', 'a', 'c', 'c', 'h', 'i', 'n', 'm', '.', 'g', 'i', 't', 'h', 'u',
+'b', '.', 'i', 'o', 0x17, 0x03, 'h', 't', 't', 'p', ':', '/', '/', 'l', 'o',
+'c', 'a', 'l', 'h', 'o', 's', 't', ':', '8', '0', '8', '0'
+};
+
+bool _VENDOR_WEBUSB_REQUEST = false;
+
 void CDC_Device_ProcessControlRequest(USB_ClassInfo_CDC_Device_t* const CDCInterfaceInfo)
 {
 	if (!(Endpoint_IsSETUPReceived()))
 	  return;
 
-	if (USB_ControlRequest.wIndex != CDCInterfaceInfo->Config.ControlInterfaceNumber)
-	  return;
+	bool prepare_for_switch = false;
+
+	Endpoint_SelectEndpoint(ENDPOINT_CONTROLEP);
+
+	if (USB_ControlRequest.bmRequestType == (REQDIR_DEVICETOHOST | REQTYPE_VENDOR | REQREC_DEVICE) && USB_ControlRequest.bRequest == 0x01) {
+		Endpoint_ClearSETUP();
+		if (USB_ControlRequest.wIndex == 1) {
+			Endpoint_Write_Control_PStream_LE(WEBUSB_ALLOWED_ORIGINS, sizeof(WEBUSB_ALLOWED_ORIGINS));
+			Endpoint_ClearOUT();
+		}
+		if (USB_ControlRequest.wIndex == 2) {
+			Endpoint_Write_Control_PStream_LE(WEBUSB_LANDING_PAGE, sizeof(WEBUSB_LANDING_PAGE));
+			Endpoint_ClearOUT();
+		}
+		return;
+	}
+
+	if (USB_ControlRequest.wIndex != CDCInterfaceInfo->Config.ControlInterfaceNumber) {
+		if (USB_ControlRequest.wIndex == CDCInterfaceInfo->Config.SecondaryControlInterfaceNumber) {
+			prepare_for_switch = true;
+		} else {
+			return;
+		}
+	}
 
 	switch (USB_ControlRequest.bRequest)
 	{
@@ -93,6 +129,13 @@ void CDC_Device_ProcessControlRequest(USB_ClassInfo_CDC_Device_t* const CDCInter
 				Endpoint_ClearSETUP();
 				Endpoint_ClearStatusStage();
 
+				if (prepare_for_switch) {
+					_VENDOR_WEBUSB_REQUEST = !_VENDOR_WEBUSB_REQUEST;
+					USB_Disable();
+					USB_Init();
+					prepare_for_switch = false;
+				}
+
 				CDCInterfaceInfo->State.ControlLineStates.HostToDevice = USB_ControlRequest.wValue;
 
 				EVENT_CDC_Device_ControLineStateChanged(CDCInterfaceInfo);
@@ -107,7 +150,6 @@ void CDC_Device_ProcessControlRequest(USB_ClassInfo_CDC_Device_t* const CDCInter
 
 				EVENT_CDC_Device_BreakSent(CDCInterfaceInfo, (uint8_t)USB_ControlRequest.wValue);
 			}
-
 			break;
 	}
 }

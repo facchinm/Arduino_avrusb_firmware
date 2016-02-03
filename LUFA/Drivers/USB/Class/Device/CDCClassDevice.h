@@ -100,6 +100,7 @@
 				struct
 				{
 					uint8_t ControlInterfaceNumber; /**< Interface number of the CDC control interface within the device. */
+					uint8_t SecondaryControlInterfaceNumber; /**< Interface number of the CDC control interface within the device. */
 
 					USB_Endpoint_Table_t DataINEndpoint; /**< Data IN endpoint configuration table. */
 					USB_Endpoint_Table_t DataOUTEndpoint; /**< Data OUT endpoint configuration table. */
