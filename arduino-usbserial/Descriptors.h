@@ -36,84 +36,115 @@
 #ifndef _DESCRIPTORS_H_
 #define _DESCRIPTORS_H_
 
-	/* Includes: */
-		#include <avr/pgmspace.h>
+/* Includes: */
+#include <avr/pgmspace.h>
 
-		#include <LUFA/Drivers/USB/USB.h>
+#include <LUFA/Drivers/USB/USB.h>
 
-	/* Product-specific definitions: */
-	#define ARDUINO_UNO_PID		0x0001
-	#define ARDUINO_MEGA2560_PID	0x0010
-	#define ARDUINO_USBSERIAL_PID	0x003B
-	#define ARDUINO_MEGAADK_PID	0x003F
-	#define ARDUINO_MEGA2560R3_PID	0x0042
-	#define ARDUINO_UNOR3_PID	0x0043
-	#define ARDUINO_MEGAADKR3_PID	0x0044
+/* Product-specific definitions: */
+#define ARDUINO_UNO_PID         0x0001
+#define ARDUINO_MEGA2560_PID    0x0010
+#define ARDUINO_USBSERIAL_PID   0x003B
+#define ARDUINO_MEGAADK_PID     0x003F
+#define ARDUINO_MEGA2560R3_PID  0x0042
+#define ARDUINO_UNOR3_PID       0x0043
+#define ARDUINO_MEGAADKR3_PID   0x0044
 
-	/* Macros: */
-		/** Endpoint address of the CDC device-to-host notification IN endpoint. */
-		#define CDC_NOTIFICATION_EPADDR        (ENDPOINT_DIR_IN  | 2)
+/* Macros: */
+/** Endpoint address of the CDC device-to-host notification IN endpoint. */
+#define CDC_NOTIFICATION_EPADDR        (ENDPOINT_DIR_IN  | 1)
 
-		/** Endpoint address of the CDC device-to-host data IN endpoint. */
-		#define CDC_TX_EPADDR                  (ENDPOINT_DIR_IN  | 3)
+/** Endpoint address of the CDC device-to-host data IN endpoint. */
+#define CDC_TX_EPADDR                  (ENDPOINT_DIR_IN  | 3)
 
-		/** Endpoint address of the CDC host-to-device data OUT endpoint. */
-		#define CDC_RX_EPADDR                  (ENDPOINT_DIR_OUT | 4)
+/** Endpoint address of the CDC host-to-device data OUT endpoint. */
+#define CDC_RX_EPADDR                  (ENDPOINT_DIR_OUT | 2)
 
-		/** Size in bytes of the CDC device-to-host notification IN endpoint. */
-		#define CDC_NOTIFICATION_EPSIZE        8
+/** Endpoint address of the CDC device-to-host data IN endpoint. */
+#define WEBUSB_TX_EPADDR               (ENDPOINT_DIR_IN  | 3)
 
-		/** Size in bytes of the CDC data IN and OUT endpoints. */
-		#define CDC_TXRX_EPSIZE                64
+/** Endpoint address of the CDC host-to-device data OUT endpoint. */
+#define WEBUSB_RX_EPADDR               (ENDPOINT_DIR_OUT | 2)
 
-	/* Type Defines: */
-		/** Type define for the device configuration descriptor structure. This must be defined in the
-		 *  application code, as the configuration descriptor contains several sub-descriptors which
-		 *  vary between devices, and which describe the device's usage to the host.
-		 */
-		typedef struct
-		{
-			USB_Descriptor_Configuration_Header_t    Config;
+/** Size in bytes of the CDC device-to-host notification IN endpoint. */
+#define CDC_NOTIFICATION_EPSIZE        8
 
-			// CDC Command Interface
-			USB_Descriptor_Interface_t               CDC_CCI_Interface;
-			USB_CDC_Descriptor_FunctionalHeader_t    CDC_Functional_Header;
-			USB_CDC_Descriptor_FunctionalACM_t       CDC_Functional_ACM;
-			USB_CDC_Descriptor_FunctionalUnion_t     CDC_Functional_Union;
-			USB_Descriptor_Endpoint_t                CDC_NotificationEndpoint;
+/** Size in bytes of the CDC data IN and OUT endpoints. */
+#define CDC_TXRX_EPSIZE                64
 
-			// CDC Data Interface
-			USB_Descriptor_Interface_t               CDC_DCI_Interface;
-			USB_Descriptor_Endpoint_t                CDC_DataOutEndpoint;
-			USB_Descriptor_Endpoint_t                CDC_DataInEndpoint;
-		} USB_Descriptor_Configuration_t;
+/* Type Defines: */
+/** Type define for the device configuration descriptor structure. This must be defined in the
+ *  application code, as the configuration descriptor contains several sub-descriptors which
+ *  vary between devices, and which describe the device's usage to the host.
+ */
+typedef struct
+{
+	USB_Descriptor_Configuration_Header_t    Config;
 
-		/** Enum for the device interface descriptor IDs within the device. Each interface descriptor
-		 *  should have a unique ID index associated with it, which can be used to refer to the
-		 *  interface from other descriptors.
-		 */
-		enum InterfaceDescriptors_t
-		{
-			INTERFACE_ID_CDC_CCI = 0, /**< CDC CCI interface descriptor ID */
-			INTERFACE_ID_CDC_DCI = 1, /**< CDC DCI interface descriptor ID */
-		};
+	// CDC Command Interface
+	USB_Descriptor_Interface_t               CDC_CCI_Interface;
+	USB_CDC_Descriptor_FunctionalHeader_t    CDC_Functional_Header;
+	USB_CDC_Descriptor_FunctionalACM_t       CDC_Functional_ACM;
+	USB_CDC_Descriptor_FunctionalUnion_t     CDC_Functional_Union;
+	USB_Descriptor_Endpoint_t                CDC_NotificationEndpoint;
 
-		/** Enum for the device string descriptor IDs within the device. Each string descriptor should
-		 *  have a unique ID index associated with it, which can be used to refer to the string from
-		 *  other descriptors.
-		 */
-		enum StringDescriptors_t
-		{
-			STRING_ID_Language     = 0, /**< Supported Languages string descriptor ID (must be zero) */
-			STRING_ID_Manufacturer = 1, /**< Manufacturer string ID */
-			STRING_ID_Product      = 2, /**< Product string ID */
-		};
+	// CDC Data Interface
+	USB_Descriptor_Interface_t               CDC_DCI_Interface;
+	USB_Descriptor_Endpoint_t                CDC_DataOutEndpoint;
+	USB_Descriptor_Endpoint_t                CDC_DataInEndpoint;
 
-	/* Function Prototypes: */
-		uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
-		                                    const uint8_t wIndex,
-		                                    const void** const DescriptorAddress)
-		                                    ATTR_WARN_UNUSED_RESULT ATTR_NON_NULL_PTR_ARG(3);
+	// WebUSB Data Interface
+	USB_Descriptor_Interface_t               WebUSB_DCI_Interface;
+} USB_Descriptor_Configuration_t;
+
+typedef struct
+{
+  USB_Descriptor_Configuration_Header_t    Config;
+
+  USB_Descriptor_Interface_t               CDC_CCI_Interface;
+  USB_CDC_Descriptor_FunctionalHeader_t    CDC_Functional_Header;
+  USB_CDC_Descriptor_FunctionalACM_t       CDC_Functional_ACM;
+  USB_CDC_Descriptor_FunctionalUnion_t     CDC_Functional_Union;
+  USB_Descriptor_Endpoint_t                CDC_NotificationEndpoint;
+
+  USB_Descriptor_Interface_t               CDC_DCI_Interface;
+  USB_Descriptor_Endpoint_t                CDC_DataOutEndpoint;
+  USB_Descriptor_Endpoint_t                CDC_DataInEndpoint;
+
+  // WebUSB Data Interface
+  USB_Descriptor_Interface_t               WebUSB_DCI_Interface;
+  USB_Descriptor_Endpoint_t                WebUSB_DataOutEndpoint;
+  USB_Descriptor_Endpoint_t                WebUSB_DataInEndpoint;
+} WEBUSB_Descriptor_Configuration_t;
+
+
+/** Enum for the device interface descriptor IDs within the device. Each interface descriptor
+ *  should have a unique ID index associated with it, which can be used to refer to the
+ *  interface from other descriptors.
+ */
+enum InterfaceDescriptors_t
+{
+	INTERFACE_ID_CDC_CCI = 0, /**< CDC CCI interface descriptor ID */
+	INTERFACE_ID_CDC_DCI = 1, /**< CDC DCI interface descriptor ID */
+	INTERFACE_ID_WEBUSB_DCI = 2, /**< CDC DCI interface descriptor ID */
+};
+
+/** Enum for the device string descriptor IDs within the device. Each string descriptor should
+ *  have a unique ID index associated with it, which can be used to refer to the string from
+ *  other descriptors.
+ */
+enum StringDescriptors_t
+{
+	STRING_ID_Language     = 0, /**< Supported Languages string descriptor ID (must be zero) */
+	STRING_ID_Manufacturer = 1, /**< Manufacturer string ID */
+	STRING_ID_Product      = 2, /**< Product string ID */
+};
+
+/* Function Prototypes: */
+uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
+                                    const uint8_t wIndex,
+                                    const void** const DescriptorAddress)
+                                    ATTR_WARN_UNUSED_RESULT ATTR_NON_NULL_PTR_ARG(3);
 
 #endif
 

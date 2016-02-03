@@ -37,42 +37,42 @@
 #define _USB_SERIAL_H_
 
 	/* Includes: */
-		#include <avr/io.h>
-		#include <avr/wdt.h>
-		#include <avr/interrupt.h>
-		#include <avr/power.h>
+	#include <avr/io.h>
+	#include <avr/wdt.h>
+	#include <avr/interrupt.h>
+	#include <avr/power.h>
 
-		#include "Descriptors.h"
+	#include "Descriptors.h"
 
-		#include <LUFA/Drivers/Board/LEDs.h>
-		#include <LUFA/Drivers/Peripheral/Serial.h>
-		#include <LUFA/Drivers/Misc/RingBuffer.h>
-		#include <LUFA/Drivers/USB/USB.h>
-		#include <LUFA/Platform/Platform.h>
+	#include <LUFA/Drivers/Board/LEDs.h>
+	#include <LUFA/Drivers/Peripheral/Serial.h>
+	#include <LUFA/Drivers/Misc/RingBuffer.h>
+	#include <LUFA/Drivers/USB/USB.h>
+	#include <LUFA/Platform/Platform.h>
 
 	/* Macros: */
-		/** LED mask for the library LED driver, to indicate TX activity. */
-                #define LEDMASK_TX               LEDS_LED1
+	/** LED mask for the library LED driver, to indicate TX activity. */
+  #define LEDMASK_TX               LEDS_LED1
 
-                /** LED mask for the library LED driver, to indicate RX activity. */
-                #define LEDMASK_RX               LEDS_LED2
+  /** LED mask for the library LED driver, to indicate RX activity. */
+  #define LEDMASK_RX               LEDS_LED2
 
-                /** LED mask for the library LED driver, to indicate that an error has occurred in the USB interface. */
-                #define LEDMASK_ERROR            (LEDS_LED1 | LEDS_LED2)
+  /** LED mask for the library LED driver, to indicate that an error has occurred in the USB interface. */
+  #define LEDMASK_ERROR            (LEDS_LED1 | LEDS_LED2)
 
-                /** LED mask for the library LED driver, to indicate that the USB interface is busy. */
-                #define LEDMASK_BUSY             (LEDS_LED1 | LEDS_LED2)
+  /** LED mask for the library LED driver, to indicate that the USB interface is busy. */
+  #define LEDMASK_BUSY             (LEDS_LED1 | LEDS_LED2)
 
 	/* Function Prototypes: */
-		void SetupHardware(void);
+	void SetupHardware(void);
 
-		void EVENT_USB_Device_Connect(void);
-		void EVENT_USB_Device_Disconnect(void);
-		void EVENT_USB_Device_ConfigurationChanged(void);
-		void EVENT_USB_Device_ControlRequest(void);
+	void EVENT_USB_Device_Connect(void);
+	void EVENT_USB_Device_Disconnect(void);
+	void EVENT_USB_Device_ConfigurationChanged(void);
+	void EVENT_USB_Device_ControlRequest(void);
 
-		void EVENT_CDC_Device_LineEncodingChanged(USB_ClassInfo_CDC_Device_t* const CDCInterfaceInfo);
-		void EVENT_CDC_Device_ControLineStateChanged(USB_ClassInfo_CDC_Device_t* const CDCInterfaceInfo);
+	void EVENT_CDC_Device_LineEncodingChanged(USB_ClassInfo_CDC_Device_t* const CDCInterfaceInfo);
+	void EVENT_CDC_Device_ControLineStateChanged(USB_ClassInfo_CDC_Device_t* const CDCInterfaceInfo);
 
 #endif
 
