@@ -75,7 +75,7 @@ const USB_Descriptor_Device_t DESCRIPTOR_PROGMEM DeviceDescriptor =
 {
 	.Header                 = {.Size = sizeof(USB_Descriptor_Device_t), .Type = DTYPE_Device},
 
-	.USBSpecification       = VERSION_BCD(1,1,0),
+	.USBSpecification       = VERSION_BCD(2,1,0),
 	.Class                  = CDC_CSCP_CDCClass,
 	.SubClass               = CDC_CSCP_NoSpecificSubclass,
 	.Protocol               = CDC_CSCP_NoSpecificProtocol,
@@ -83,8 +83,8 @@ const USB_Descriptor_Device_t DESCRIPTOR_PROGMEM DeviceDescriptor =
 	.Endpoint0Size          = FIXED_CONTROL_ENDPOINT_SIZE,
 
 	// passed through makefile
-	.VendorID = VENDORID,
-	.ProductID = PRODUCTID,
+	.VendorID 				= VENDORID,
+	.ProductID 				= PRODUCTID,
 	.ReleaseNumber          = VERSION_BCD(2,0,5),
 
 	.ManufacturerStrIndex   = STRING_ID_Manufacturer,
@@ -106,7 +106,7 @@ const USB_Descriptor_Configuration_t DESCRIPTOR_PROGMEM ConfigurationDescriptor 
 			.Header                 = {.Size = sizeof(USB_Descriptor_Configuration_Header_t), .Type = DTYPE_Configuration},
 
 			.TotalConfigurationSize = sizeof(USB_Descriptor_Configuration_t),
-			.TotalInterfaces        = 2,
+			.TotalInterfaces        = 3,
 
 			.ConfigurationNumber    = 1,
 			.ConfigurationStrIndex  = NO_DESCRIPTOR,
@@ -201,6 +201,42 @@ const USB_Descriptor_Configuration_t DESCRIPTOR_PROGMEM ConfigurationDescriptor 
 			.Attributes             = (EP_TYPE_BULK | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
 			.EndpointSize           = CDC_TX_EPSIZE,
 			.PollingIntervalMS      = 0x01
+		},
+
+	.WebUSB_DCI_Interface =
+		{
+			.Header                 = {.Size = sizeof(USB_Descriptor_Interface_t), .Type = DTYPE_Interface},
+
+			.InterfaceNumber        = INTERFACE_ID_WEBUSB_DCI,
+			.AlternateSetting       = 0,
+
+			.TotalEndpoints         = 2,
+
+			.Class                  = 0xFF,
+			.SubClass               = 0,
+			.Protocol               = 0,
+
+			.InterfaceStrIndex      = NO_DESCRIPTOR
+		},
+
+	.WebUSB_DataOutEndpoint =
+		{
+			.Header                 = {.Size = sizeof(USB_Descriptor_Endpoint_t), .Type = DTYPE_Endpoint},
+
+			.EndpointAddress        = WEBUSB_RX_EPADDR,
+			.Attributes             = (EP_TYPE_BULK | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
+			.EndpointSize           = CDC_TX_EPSIZE,
+			.PollingIntervalMS      = 0x01
+		},
+
+	.WebUSB_DataInEndpoint =
+		{
+			.Header                 = {.Size = sizeof(USB_Descriptor_Endpoint_t), .Type = DTYPE_Endpoint},
+
+			.EndpointAddress        = WEBUSB_TX_EPADDR,
+			.Attributes             = (EP_TYPE_BULK | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
+			.EndpointSize           = CDC_RX_EPSIZE,
+			.PollingIntervalMS      = 0x01
 		}
 };
 
@@ -221,6 +257,17 @@ const USB_Descriptor_String_t DESCRIPTOR_PROGMEM ManufacturerString = USB_STRING
  *  Descriptor.
  */
 const USB_Descriptor_String_t DESCRIPTOR_PROGMEM ProductString = USB_STRING_DESCRIPTOR(USB_DESCRIPTOR_STRING);
+
+const uint8_t DESCRIPTOR_PROGMEM BOS_DESCRIPTOR[29] = {
+// BOS descriptor header.
+0x05, 0x0F, 0x1C, 0x00, 0x01,
+
+// WebUSB Platform Capability descriptor (bVendorCode == 0x01).
+0x17, 0x10, 0x05, 0x00, 0x38, 0xB6, 0x08, 0x34, 0xA9, 0x09, 0xA0, 0x47,
+0x8B, 0xFD, 0xA0, 0x76, 0x88, 0x15, 0xB6, 0x65, 0x00, 0x01, 0x01,
+};
+
+#define USB_BOS_DESCRIPTOR_TYPE		15
 
 /** This function is called by the library when in device mode, and must be overridden (see LUFA library "USB Descriptors"
  *  documentation) by the application code so that the address and size of a requested descriptor can be given
@@ -264,7 +311,13 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
 				Address = &ProductString;
 				Size    = STRING_PROGMEM(ProductString.Header.Size);
 			}
-
+			break;
+		case USB_BOS_DESCRIPTOR_TYPE:
+			if (DescriptorNumber == 0)
+			{
+				Address = BOS_DESCRIPTOR;
+				Size 	= sizeof(BOS_DESCRIPTOR);
+			}
 			break;
 	}
 

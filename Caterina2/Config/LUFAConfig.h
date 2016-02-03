@@ -90,11 +90,11 @@ along with Hoodloader2.  If not, see <http://www.gnu.org/licenses/>.
 
 		/* USB Device Mode Driver Related Tokens: */
 // Only use RAM Descriptors if we have enough ram
-#if ((RAMEND - RAMSTART) >= 512)
-		#define USE_RAM_DESCRIPTORS
-#else
+//#if ((RAMEND - RAMSTART) >= 512)
+//		#define USE_RAM_DESCRIPTORS
+//#else
 		#define USE_FLASH_DESCRIPTORS
-#endif
+//#endif
 
 //		#define USE_EEPROM_DESCRIPTORS
 //		#define NO_INTERNAL_SERIAL
