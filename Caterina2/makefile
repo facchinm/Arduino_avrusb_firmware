@@ -18,7 +18,7 @@ F_CPU        = 16000000
 F_USB        = $(F_CPU)
 OPTIMIZATION = s
 TARGET       = Caterina2
-SRC          = $(TARGET).c Descriptors.c BootloaderAPI.c BootloaderAPITable.S $(LUFA_SRC_USB)
+SRC          = $(TARGET).c Descriptors.c BootloaderAPITable.S $(LUFA_SRC_USB)
 LUFA_PATH    = ../LUFA
 CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -IConfig/ $(HOODLOADER2_OPTS) -DBOOT_START_ADDR=$(BOOT_START_OFFSET) $(REGS) -flto -fuse-linker-plugin
 LD_FLAGS     = -Wl,--section-start=.text=$(BOOT_START_OFFSET) $(BOOT_API_LD_FLAGS),--section-start=.data=$(RAM_OFFSET) $(REGS) -flto -fuse-linker-plugin
@@ -65,19 +65,18 @@ HOODLOADER2_OPTS += -DPOWER_ON_TO_BOOTLOADER=false
 HOODLOADER2_OPTS += -DBOOTKEY=RAMEND-1
 HOODLOADER2_OPTS += -DSECOND_BOOTKEY=0x8000
 
-
 # Add an offset of 256 + 128 bytes to RAMSTART for the ringbuffers
 # +1 byte offset for old MagicBootKey support (0x280)
 # +1 for better data aligning or in case a 2byte key is written
 # u2 and u4 Series (RAMSTART = 0x100):
-RAM_OFFSET            = 0x800282
+RAM_OFFSET            = 0x800120
 
 # Reserved registers for faster USB-Serial convertion
 # The lower, the better (except 0 and 1)
 # r2-5 used for faster USART ISRs
 # r6 used for 32u4 optimization
-REGS  = -ffixed-r2 -ffixed-r3 -ffixed-r4 -ffixed-r5 -ffixed-r6
-
+#REGS  = -ffixed-r2 -ffixed-r3 -ffixed-r4 -ffixed-r5 -ffixed-r6
+REGS = -ffixed-r6
 
 # Bootloader address calculation formulas
 # Do not modify these macros, but rather modify the dependent values above.

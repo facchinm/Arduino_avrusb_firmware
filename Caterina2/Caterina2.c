@@ -71,9 +71,6 @@ static CDC_LineEncoding_t LineEncoding = { .BaudRateBPS = 0,
 * - Also 128 bytes from 0x200 for UART TX buffer, same addressing.
 * normal RAM data starts at 0x280, see offset in makefile*/
 
-#define USART2USB_BUFLEN 256 // 0xFF - 8bit
-#define USB2USART_BUFLEN 128 // 0x7F - 7bit
-
 // USB-Serial buffer pointers are saved in GPIORn
 // for better access (e.g. cbi) in ISRs
 // This has nothing to do with r0 and r1!
@@ -82,11 +79,6 @@ static CDC_LineEncoding_t LineEncoding = { .BaudRateBPS = 0,
 // They are initialied in the CDC LineEncoding Event
 #define USBtoUSART_ReadPtr GPIOR0 // to use cbi()
 #define USARTtoUSB_WritePtr GPIOR1
-
-/* USBtoUSART_WritePtr needs to be visible to ISR. */
-/* USARTtoUSB_ReadPtr needs to be visible to CDC LineEncoding Event. */
-static volatile uint8_t USBtoUSART_WritePtr = 0;
-static volatile uint8_t USARTtoUSB_ReadPtr = 0;
 
 // Variable to save how many bytes are laying in the USB TX bank if in bootloader mode
 register uint8_t bankTX asm("r6");
@@ -103,12 +95,6 @@ static uint32_t CurrAddress;
 *  loop until the AVR restarts and the application runs.
 */
 static bool RunBootloader = true;
-
-// Variable to determine if CDC baudrate is for the bootloader mode, USB-Serial or if CDC is turned off
-#define MODE_OFF 0
-#define MODE_BOOTLOADER 1
-#define MODE_USBSERIAL 2
-static uint8_t mode = MODE_OFF;
 
 // MAH 8/15/12- let's make this an 8-bit value instead of 16- that saves on memory because 16-bit addition and
 //  comparison compiles to bulkier code. Note that this does *not* require a change to the Arduino core- we're
@@ -137,6 +123,7 @@ volatile uint8_t *const SecondMagicBootKeyPtr = (volatile uint8_t *)0x8000;
 *  start key has been loaded into \ref MagicBootKey. If the bootloader started via the watchdog and the key is valid,
 *  this will force the user application to start via a software jump.
 */
+
 void Application_Jump_Check(void)
 {
 	// Save the value of the boot key memory before it is overwritten
@@ -334,14 +321,12 @@ int main(void)
 					Endpoint_ClearOUT();
 			}
 
-			if(mode == MODE_BOOTLOADER){
-				if(countRX){
-					LEDs_TurnOnTXLED;
-					LEDs_TurnOnRXLED;
-					TxLEDPulse = TX_RX_LED_PULSE_MS;
-					RxLEDPulse = TX_RX_LED_PULSE_MS;
-					Bootloader_Task();
-				}
+			if(countRX){
+				LEDs_TurnOnTXLED;
+				LEDs_TurnOnRXLED;
+				TxLEDPulse = TX_RX_LED_PULSE_MS;
+				RxLEDPulse = TX_RX_LED_PULSE_MS;
+				Bootloader_Task();
 			}
 		};
 
@@ -406,64 +391,26 @@ void EVENT_USB_Device_ControlRequest(void)
 
 	/* Process CDC specific control requests */
 	uint8_t bRequest = USB_ControlRequest.bRequest;
-	if (bRequest == CDC_REQ_GetLineEncoding){
-		if (USB_ControlRequest.bmRequestType == (REQDIR_DEVICETOHOST | REQTYPE_CLASS | REQREC_INTERFACE))
-		{
-			Endpoint_ClearSETUP();
-
-			/* Write the line coding data to the control endpoint */
-			// this one is not inline because its already used somewhere in the usb core, so it will dupe code
-			Endpoint_Write_Control_Stream_LE(&LineEncoding, sizeof(CDC_LineEncoding_t));
-			Endpoint_ClearOUT();
-		}
-	}
-	else if (bRequest == CDC_REQ_SetLineEncoding){
+	if (bRequest == CDC_REQ_SetLineEncoding){
 		if (USB_ControlRequest.bmRequestType == (REQDIR_HOSTTODEVICE | REQTYPE_CLASS | REQREC_INTERFACE))
 		{
+			uint32_t useless;
+			uint8_t useless_2;
 			Endpoint_ClearSETUP();
 
-			// Read the line coding data in from the host into the global struct (made inline)
-			//Endpoint_Read_Control_Stream_LE(&LineEncoding, sizeof(CDC_LineEncoding_t));
-
-			uint8_t Length = sizeof(CDC_LineEncoding_t);
-			uint8_t* DataStream = (uint8_t*)&LineEncoding;
-
-			bool skip = false;
-			while (Length)
+			while (!(Endpoint_IsOUTReceived()))
 			{
-				uint8_t USB_DeviceState_LCL = USB_DeviceState;
-
-				if ((USB_DeviceState_LCL == DEVICE_STATE_Unattached) || (USB_DeviceState_LCL == DEVICE_STATE_Suspended) || (Endpoint_IsSETUPReceived())){
-					skip = true;
-					break;
-				}
-
-				if (Endpoint_IsOUTReceived())
-				{
-					while (Length && Endpoint_BytesInEndpoint())
-					{
-						*DataStream = Endpoint_Read_8();
-						DataStream++;
-						Length--;
-					}
-
-					Endpoint_ClearOUT();
-				}
+				if (USB_DeviceState == DEVICE_STATE_Unattached)
+				  return;
 			}
 
-			if (!skip){
-				do
-				{
-					uint8_t USB_DeviceState_LCL = USB_DeviceState;
+			useless = Endpoint_Read_32_LE();
+			useless_2  = Endpoint_Read_8();
+			useless_2  = Endpoint_Read_8();
+			useless_2    = Endpoint_Read_8();
 
-					if ((USB_DeviceState_LCL == DEVICE_STATE_Unattached) || (USB_DeviceState_LCL == DEVICE_STATE_Suspended))
-					break;
-				}while (!(Endpoint_IsINReady()));
-			}
-
-			// end of inline Endpoint_Read_Control_Stream_LE
-
-			Endpoint_ClearIN();
+			Endpoint_ClearOUT();
+			Endpoint_ClearStatusStage();
 
 			CDC_Device_LineEncodingChanged();
 		}
@@ -483,60 +430,6 @@ void EVENT_USB_Device_ControlRequest(void)
 		}
 	}
 }
-
-/** ISR to manage the reception of data from the serial port, placing received bytes into a circular buffer
-*  for later transmission to the host.
-*/
-ISR(USART1_RX_vect, ISR_NAKED)
-{
-	// This ISR doesnt change SREG. Whoa.
-	asm volatile (
-		"lds r3, %[UDR1_Reg]\n\t" 		// (1) Load new Serial byte (UDR1) into r3
-		"movw r4, r30\n\t" 				// (1) Backup Z pointer (r30 -> r4, r31 -> r5)
-		"in r30, %[writePointer]\n\t" 	// (1) Load USARTtoUSB write buffer 8 bit pointer to lower Z pointer
-		"ldi r31, 0x01\n\t" 			// (1) Set higher Z pointer to 0x01
-		"st Z+, r3\n\t" 				// (2) Save UDR1 in Z pointer (USARTtoUSB write buffer) and increment
-		"out %[writePointer], r30\n\t" 	// (1) Save back new USARTtoUSB buffer pointer location
-		"movw r30, r4\n\t" 				// (1) Restore backuped Z pointer
-		"reti\n\t"						// (4) Exit ISR
-
-		// Inputs:
-		:: [UDR1_Reg] "m" (UDR1), 		// Memory location of UDR1
-		[writePointer] "I" (_SFR_IO_ADDR(USARTtoUSB_WritePtr)) // 8 bit pointer to USARTtoUSB write buffer
-	);
-}
-
-ISR(USART1_UDRE_vect, ISR_NAKED)
-{
-	// Another SREG-less ISR.
-	asm volatile (
-		"movw r4, r30\n\t" 					// (1) Backup Z pointer (r30 -> r4, r31 -> r5)
-		"in r30, %[readPointer]\n\t"		// (1) Load USBtoUSART read buffer 8 bit pointer to lower Z pointer
-		"ldi r31, 0x02\n\t" 				// (1) Set higher Z pointer to 0x02
-		"ld r3, Z+\n\t" 					// (2) Load next byte from USBtoUSART buffer into r3
-		"sts %[UDR1_Reg], r3\n\t"			// (2) Save r3 (next byte) in UDR1
-		"out %[readPointer], r30\n\t" 		// (1) Save back new USBtoUSART read buffer pointer location
-		"cbi %[readPointer], 7\n\t" 		// (2) Wrap around for 128 bytes
-		//     smart after-the-fact andi 0x7F without using SREG
-		"movw r30, r4\n\t"					// (1) Restore backuped Z pointer
-		"in r2, %[readPointer]\n\t"			// (1) Load USBtoUSART read buffer 8 bit pointer to r2
-		"lds r3, %[writePointer]\n\t" 		// (1) Load USBtoUSART write buffer to r3
-		"cpse r2, r3\n\t"					// (1/2) Check if USBtoUSART read buffer == USBtoUSART write buffer
-		"reti\n\t"							// (4) They are not equal, more bytes coming soon!
-		"ldi r30, 0x98\n\t"					// (1) Set r30 temporary to new UCSR1B setting ((1<<RXCIE1) | (1 << RXEN1) | (1 << TXEN1))
-		//     ldi needs an upper register, restore Z once more afterwards
-		"sts %[UCSR1B_Reg], r30\n\t"		// (2) Turn off this interrupt (UDRIE1), all bytes sent
-		"movw r30, r4\n\t"					// (1) Restore backuped Z pointer again (was overwritten again above)
-		"reti\n\t"							// (4) Exit ISR
-
-		// Inputs:
-		:: [UDR1_Reg] "m" (UDR1),
-		[readPointer] "I" (_SFR_IO_ADDR(USBtoUSART_ReadPtr)), 	// 7 bit pointer to USBtoUSART read buffer
-		[writePointer] "m" (USBtoUSART_WritePtr), 				// 7 bit pointer to USBtoUSART write buffer
-		[UCSR1B_Reg] "m" (UCSR1B)			// Memory location of UDR1
-	);
-}
-
 
 /** Retrieves the next byte from the host in the CDC data OUT endpoint, and clears the endpoint bank if needed
 *  to allow reception of the next data packet from the host.
@@ -942,84 +835,7 @@ static void ReadWriteMemoryBlock(const uint8_t Command)
 */
 static void CDC_Device_LineEncodingChanged(void)
 {
-	/* Keep the TX line held high (idle) while the USART is reconfigured */
-	PORTD |= (1 << 3);
-
-	/* Must turn off USART before reconfiguring it, otherwise incorrect operation may occur */
-	UCSR1B = 0;
-	UCSR1A = 0;
-	UCSR1C = 0;
-
 	/* Flush data that was about to be sent. */
 	USBtoUSART_ReadPtr = 0;
-	USBtoUSART_WritePtr = 0;
-	USARTtoUSB_ReadPtr = 0;
 	USARTtoUSB_WritePtr = 0;
-
-	// Only reconfigure USART if we are not in self reprogramming mode
-	// and if the CDC Serial is not disabled
-	uint32_t BaudRateBPS = LineEncoding.BaudRateBPS;
-	if(BaudRateBPS == 0){
-		mode = MODE_OFF;
-	}
-	else if(BaudRateBPS == BAUDRATE_CDC_BOOTLOADER){
-		mode = MODE_BOOTLOADER;
-	}
-	else
-	{
-		mode = MODE_USBSERIAL;
-		uint8_t ConfigMask = 0;
-
-		switch (LineEncoding.ParityType)
-		{
-			case CDC_PARITY_Odd:
-			ConfigMask = ((1 << UPM11) | (1 << UPM10));
-			break;
-			case CDC_PARITY_Even:
-			ConfigMask = (1 << UPM11);
-			break;
-		}
-
-		if (LineEncoding.CharFormat == CDC_LINEENCODING_TwoStopBits)
-		ConfigMask |= (1 << USBS1);
-
-		switch (LineEncoding.DataBits)
-		{
-			case 6:
-			ConfigMask |= (1 << UCSZ10);
-			break;
-			case 7:
-			ConfigMask |= (1 << UCSZ11);
-			break;
-			case 8:
-			ConfigMask |= ((1 << UCSZ11) | (1 << UCSZ10));
-			break;
-		}
-
-		// Set the new baud rate before configuring the USART
-		uint8_t clockSpeed = (1 << U2X1);
-		uint16_t brr = SERIAL_2X_UBBRVAL(BaudRateBPS);
-
-		// No need U2X or cant have U2X.
-		if ((brr & 1) || (brr > 4095)) {
-			brr >>= 1;
-			clockSpeed = 0;
-		}
-
-		// Or special case 57600 baud for compatibility with the ATmega328 bootloader.
-		else if(((brr == SERIAL_2X_UBBRVAL(57600)) && (BAUDRATE_CDC_BOOTLOADER != 57600))){
-			brr = SERIAL_UBBRVAL(57600);
-			clockSpeed = 0;
-		}
-
-		UBRR1 = brr;
-
-		// Reconfigure the USART
-		UCSR1C = ConfigMask;
-		UCSR1A = clockSpeed;
-		UCSR1B = ((1 << RXCIE1) | (1 << TXEN1) | (1 << RXEN1));
-	}
-
-	/* Release the TX line after the USART has been reconfigured */
-	PORTD &= ~(1 << 3);
 }

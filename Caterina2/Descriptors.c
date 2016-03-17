@@ -75,7 +75,7 @@ const USB_Descriptor_Device_t DESCRIPTOR_PROGMEM DeviceDescriptor =
 {
 	.Header                 = {.Size = sizeof(USB_Descriptor_Device_t), .Type = DTYPE_Device},
 
-	.USBSpecification       = VERSION_BCD(1,1,0),
+	.USBSpecification       = VERSION_BCD(2,1,0),
 	.Class                  = CDC_CSCP_CDCClass,
 	.SubClass               = CDC_CSCP_NoSpecificSubclass,
 	.Protocol               = CDC_CSCP_NoSpecificProtocol,
@@ -83,8 +83,8 @@ const USB_Descriptor_Device_t DESCRIPTOR_PROGMEM DeviceDescriptor =
 	.Endpoint0Size          = FIXED_CONTROL_ENDPOINT_SIZE,
 
 	// passed through makefile
-	.VendorID = VENDORID,
-	.ProductID = PRODUCTID,
+	.VendorID 				= VENDORID,
+	.ProductID 				= PRODUCTID,
 	.ReleaseNumber          = VERSION_BCD(2,0,5),
 
 	.ManufacturerStrIndex   = STRING_ID_Manufacturer,
@@ -264,7 +264,6 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
 				Address = &ProductString;
 				Size    = STRING_PROGMEM(ProductString.Header.Size);
 			}
-
 			break;
 	}
 

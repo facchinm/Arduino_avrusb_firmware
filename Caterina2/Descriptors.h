@@ -112,20 +112,20 @@ along with Hoodloader2.  If not, see <http://www.gnu.org/licenses/>.
 			#error The selected AVR part is not currently supported by this bootloader.
 		#endif
 
-		/** Endpoint address for the CDC control interface event notification endpoint. */
-		#define CDC_NOTIFICATION_EPADDR        (ENDPOINT_DIR_IN | 2)
+		/** Endpoint address of the CDC device-to-host notification IN endpoint. */
+		#define CDC_NOTIFICATION_EPADDR        (ENDPOINT_DIR_IN  | 1)
 
-		/** Endpoint address for the CDC data interface TX (data IN) endpoint. */
-		#define CDC_TX_EPADDR                  (ENDPOINT_DIR_IN | 3)
+		/** Endpoint address of the CDC device-to-host data IN endpoint. */
+		#define CDC_TX_EPADDR                  (ENDPOINT_DIR_IN  | 3)
 
-		/** Endpoint address for the CDC data interface RX (data OUT) endpoint. */
-		#define CDC_RX_EPADDR                  (ENDPOINT_DIR_OUT | 4)
+		/** Endpoint address of the CDC host-to-device data OUT endpoint. */
+		#define CDC_RX_EPADDR                  (ENDPOINT_DIR_OUT | 2)
 
 		/** Size of the CDC data interface TX and RX data endpoint banks, in bytes. */
 		#define CDC_TX_EPSIZE                64
-#define CDC_TX_BANK_SIZE 2
-		#define CDC_RX_EPSIZE                32
-#define CDC_RX_BANK_SIZE 1
+		#define CDC_TX_BANK_SIZE 			 1
+		#define CDC_RX_EPSIZE                64
+		#define CDC_RX_BANK_SIZE 			 1
 
 		/** Size of the CDC control interface notification endpoint bank, in bytes. */
 		#define CDC_NOTIFICATION_EPSIZE        8
@@ -150,6 +150,7 @@ along with Hoodloader2.  If not, see <http://www.gnu.org/licenses/>.
 			USB_Descriptor_Interface_t               CDC_DCI_Interface;
 			USB_Descriptor_Endpoint_t                CDC_DataOutEndpoint;
 			USB_Descriptor_Endpoint_t                CDC_DataInEndpoint;
+
 		} USB_Descriptor_Configuration_t;
 
 		/** Enum for the device interface descriptor IDs within the device. Each interface descriptor
