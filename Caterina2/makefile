@@ -42,7 +42,7 @@ BOOT_SECTION_SIZE_KB  = 4
 #define ARDUINO_DUE_PID             0x003D
 
 HOODLOADER2_OPTS  = -DVENDORID=ARDUINO_VID
-HOODLOADER2_OPTS += -DPRODUCTID=ARDUINO_MICRO_PID
+HOODLOADER2_OPTS += -DPRODUCTID=$(ARDUINO_MODEL_PID)
 
 # 1200 is the baud to load the Bootloader from an Arduino sketch,
 # 57600 turns out to be the actual baud rate for uploading for default arduino bootloaders (and arduino nano by default!)
