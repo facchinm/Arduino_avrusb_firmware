@@ -55,6 +55,9 @@ extern "C" {
 			#define ARDUINO_MEGA_ADK_PID		0x0044 // R3 (003F R1)
 			#define ARDUINO_LEONARDO_PID		0x0036 // Bootloader, not program!
 			#define ARDUINO_MICRO_PID   		0x0037 // Bootloader, not program!
+			#define GENUINO_MICRO_PID   		0x0237 // Bootloader, not program!
+			#define ARDUINO_YUN101_PID   		0x0051 // Bootloader, not program!
+			#define GENUINO_YUN101_PID   		0x0251 // Bootloader, not program!
 			#define ARDUINO_DUE_PID             0x003D
 			
 			// USB product string settings
@@ -68,6 +71,12 @@ extern "C" {
 			#define USB_DESCRIPTOR_STRING L"Arduino Leonardo"
 			#elif (PRODUCTID == ARDUINO_MICRO_PID)
 			#define USB_DESCRIPTOR_STRING L"Arduino Micro"
+			#elif (PRODUCTID == GENUINO_MICRO_PID)
+			#define USB_DESCRIPTOR_STRING L"Genuino Micro"
+			#elif (PRODUCTID == ARDUINO_YUN101_PID)
+			#define USB_DESCRIPTOR_STRING L"Arduino YUN101"
+			#elif (PRODUCTID == GENUINO_YUN101_PID)
+			#define USB_DESCRIPTOR_STRING L"Genuino YUN101"
 			#elif (PRODUCTID == ARDUINO_DUE_PID)
 			#define USB_DESCRIPTOR_STRING L"Arduino Due"
 			#else
