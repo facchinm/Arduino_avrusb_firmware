@@ -268,13 +268,13 @@ void EVENT_CDC_Device_LineEncodingChanged(USB_ClassInfo_CDC_Device_t* const CDCI
 
 	/* Set the new baud rate before configuring the USART */
 	/* Special case 57600 baud for compatibility with the ATmega328 bootloader. */
-	UBRR1  = (CDCInterfaceInfo->State.LineEncoding.BaudRateBPS == 57600)
+	UBRR1  = (CDCInterfaceInfo->State.LineEncoding.BaudRateBPS == 57600 || CDCInterfaceInfo->State.LineEncoding.BaudRateBPS == 300)
 			? SERIAL_UBBRVAL(CDCInterfaceInfo->State.LineEncoding.BaudRateBPS)
 			: SERIAL_2X_UBBRVAL(CDCInterfaceInfo->State.LineEncoding.BaudRateBPS);
 
 	/* Reconfigure the USART in double speed mode for a wider baud rate range at the expense of accuracy */
 	UCSR1C = ConfigMask;
-	UCSR1A = (CDCInterfaceInfo->State.LineEncoding.BaudRateBPS == 57600) ? 0 : (1 << U2X1);
+	UCSR1A = (CDCInterfaceInfo->State.LineEncoding.BaudRateBPS == 57600 || CDCInterfaceInfo->State.LineEncoding.BaudRateBPS == 300) ? 0 : (1 << U2X1);
 	UCSR1B = ((1 << RXCIE1) | (1 << TXEN1) | (1 << RXEN1));
 
 	/* Release the TX line after the USART has been reconfigured */
