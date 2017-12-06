@@ -24,8 +24,10 @@ make clean && ARDUINO_MODEL_PID=0x0037 make #Arduino Micro
 mv Caterina2.hex ../distrib/Caterina2_ArduinoMicro.hex
 make clean && ARDUINO_MODEL_PID=0x0237 make #Genuino Micro
 mv Caterina2.hex ../distrib/Caterina2_GenuinoMicro.hex
-make clean && ARDUINO_MODEL_PID=0x0051 make #Arduino Yun101
-mv Caterina2.hex ../distrib/Caterina2_ArduinoYun101.hex
+make clean && ARDUINO_MODEL_PID=0x0041 make #Arduino Yun101
+mv Caterina2.hex ../distrib/Caterina2-Yun.hex
 make clean && ARDUINO_MODEL_PID=0x0251 make #Genuino Yun101
 mv Caterina2.hex ../distrib/Caterina2_GenuinoYun101.hex
+make clean && ARDUINO_MODEL_PID=0x0036 make #Arduino Leonardo
+mv Caterina2.hex ../distrib/Caterina2_Leonardo.hex
 cd ..

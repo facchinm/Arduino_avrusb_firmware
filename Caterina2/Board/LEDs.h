@@ -81,11 +81,17 @@ extern "C" {
 
 			// Direct Port access for more speed
 			// Leds PORT needs to be switched for Micro
+			#if (PRODUCTID == 0x0036)
+			#define LEDs_TurnOffTXLED (PORTD |= LEDMASK_TX)
+			#define LEDs_TurnOffRXLED (PORTB |= LEDMASK_RX)
+			#define LEDs_TurnOnTXLED (PORTD &= ~LEDMASK_TX)
+			#define LEDs_TurnOnRXLED (PORTB &= ~LEDMASK_RX)
+			#else
 			#define LEDs_TurnOffTXLED (PORTD &= ~LEDMASK_TX)
-			#define LEDs_TurnOffRXLED (PORTB &= ~LEDMASK_RX)
-			#define LEDs_TurnOnTXLED (PORTD |= LEDMASK_TX)
-			#define LEDs_TurnOnRXLED (PORTB |= LEDMASK_RX)
-
+                        #define LEDs_TurnOffRXLED (PORTB &= ~LEDMASK_RX)
+                        #define LEDs_TurnOnTXLED (PORTD |= LEDMASK_TX)
+                        #define LEDs_TurnOnRXLED (PORTB |= LEDMASK_RX)
+			#endif
 		/* Inline Functions: */
 		#if !defined(__DOXYGEN__)
 			static inline void LEDs_Init(void)
