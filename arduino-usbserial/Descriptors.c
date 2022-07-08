@@ -209,6 +209,10 @@ const USB_Descriptor_String_t PROGMEM ProductString = USB_STRING_DESCRIPTOR(L"Ar
 const USB_Descriptor_String_t PROGMEM ProductString = USB_STRING_DESCRIPTOR(L"Genuino UNO R3");
 #elif (ARDUINO_MODEL_PID == ARDUINO_MEGA2560R3_PID+0x200)
 const USB_Descriptor_String_t PROGMEM ProductString = USB_STRING_DESCRIPTOR(L"Genuino Mega 2560 R3");
+#elif (ARDUINO_MODEL_PID == ARDUINO_UNO_MINI_PID)
+const USB_Descriptor_String_t PROGMEM ProductString = USB_STRING_DESCRIPTOR(L"Arduino UNO Mini");
+#elif (ARDUINO_MODEL_PID == ARDUINO_USBC_SERIAL)
+const USB_Descriptor_String_t PROGMEM ProductString = USB_STRING_DESCRIPTOR(L"Arduino USB-C Serial");
 #endif
 
 /** This function is called by the library when in device mode, and must be overridden (see library "USB Descriptors"

@@ -48,8 +48,17 @@
 			#error Do not include this file directly. Include LUFA/Drivers/Board/LEDS.h instead.
 		#endif
 
+	#if (ARDUINO_MODEL_PID == ARDUINO_USBC_SERIAL)
+			#define LEDS_PORT        PORTB
+			#define LEDS_DDR         DDRB
+	#else
+			#define LEDS_PORT        PORTD
+			#define LEDS_DDR         DDRD
+	#endif
+
 	/* Public Interface - May be used in end-application: */
 		/* Macros: */
+
 			/** LED mask for the first LED on the board. */
 			#define LEDS_LED1        (1 << 5)
 
@@ -66,39 +75,39 @@
 		#if !defined(__DOXYGEN__)
 			static inline void LEDs_Init(void)
 			{
-				DDRD  |= LEDS_ALL_LEDS;
-				PORTD |= LEDS_ALL_LEDS;
+				LEDS_DDR  |= LEDS_ALL_LEDS;
+				LEDS_PORT |= LEDS_ALL_LEDS;
 			}
 			
 			static inline void LEDs_TurnOnLEDs(const uint8_t LEDMask)
 			{
-				PORTD &= ~LEDMask;
+				LEDS_PORT &= ~LEDMask;
 			}
 
 			static inline void LEDs_TurnOffLEDs(const uint8_t LEDMask)
 			{
-				PORTD |= LEDMask;
+				LEDS_PORT |= LEDMask;
 			}
 
 			static inline void LEDs_SetAllLEDs(const uint8_t LEDMask)
 			{
-				PORTD = ((PORTD | LEDS_ALL_LEDS) & ~LEDMask);
+				LEDS_PORT = ((LEDS_PORT | LEDS_ALL_LEDS) & ~LEDMask);
 			}
 			
 			static inline void LEDs_ChangeLEDs(const uint8_t LEDMask, const uint8_t ActiveMask)
 			{
-				PORTD = ((PORTD | ActiveMask) & ~LEDMask);
+				LEDS_PORT = ((LEDS_PORT | ActiveMask) & ~LEDMask);
 			}
 
 			static inline void LEDs_ToggleLEDs(const uint8_t LEDMask)
 			{
-				PORTD ^= LEDMask;
+				LEDS_PORT ^= LEDMask;
 			}
 			
 			static inline uint8_t LEDs_GetLEDs(void) ATTR_WARN_UNUSED_RESULT;
 			static inline uint8_t LEDs_GetLEDs(void)
 			{
-				return (PORTD & LEDS_ALL_LEDS);
+				return (LEDS_PORT & LEDS_ALL_LEDS);
 			}
 		#endif
 

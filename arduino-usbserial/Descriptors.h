@@ -49,6 +49,8 @@
 	#define ARDUINO_MEGA2560R3_PID	0x0042
 	#define ARDUINO_UNOR3_PID	0x0043
 	#define ARDUINO_MEGAADKR3_PID	0x0044
+	#define ARDUINO_UNO_MINI_PID	0x0062
+	#define ARDUINO_USBC_SERIAL	0x006A
 
 	/* Macros: */
 		/** Endpoint address of the CDC device-to-host notification IN endpoint. */
