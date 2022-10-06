@@ -59,11 +59,20 @@
 	/* Public Interface - May be used in end-application: */
 		/* Macros: */
 
+	#if (ARDUINO_MODEL_PID == ARDUINO_USBC_SERIAL)
+
+			/** LED mask for the first LED on the board. */
+			#define LEDS_LED1        (1 << 4)
+
+			/** LED mask for the second LED on the board. */
+			#define LEDS_LED2        (1 << 5)
+	#else
 			/** LED mask for the first LED on the board. */
 			#define LEDS_LED1        (1 << 5)
 
 			/** LED mask for the second LED on the board. */
 			#define LEDS_LED2        (1 << 4)
+	#endif
 
 			/** LED mask for all the LEDs on the board. */
 			#define LEDS_ALL_LEDS    (LEDS_LED1 | LEDS_LED2)
